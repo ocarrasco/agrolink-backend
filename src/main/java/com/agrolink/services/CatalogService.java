@@ -1,6 +1,6 @@
 package com.agrolink.services;
 
-import com.agrolink.dto.SupplierResponse;
+import com.agrolink.dto.response.SupplierResponse;
 import com.agrolink.mappers.SupplierMapper;
 import com.agrolink.model.CatalogItemModel;
 import com.agrolink.model.UserProfileModel;

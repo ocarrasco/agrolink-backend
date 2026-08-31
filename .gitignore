@@ -8,3 +8,4 @@ target/
 
 
 *.md
+/sonar.bat

@@ -1,7 +1,7 @@
 package com.agrolink.controllers;
 
-import com.agrolink.dto.UpdateUserProfileRequest;
-import com.agrolink.dto.UserProfileResponse;
+import com.agrolink.dto.request.UpdateUserProfileRequest;
+import com.agrolink.dto.response.UserProfileResponse;
 import com.agrolink.services.UserProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

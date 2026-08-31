@@ -1,11 +1,14 @@
 package com.agrolink.controllers;
 
-import com.agrolink.dto.CreateOrderRequest;
-import com.agrolink.dto.OrderResponse;
+import com.agrolink.dto.request.CreateOrderRequest;
+import com.agrolink.dto.response.OrderResponse;
+import com.agrolink.dto.response.RetailerDashboardResponse;
 import com.agrolink.model.enums.OrderStatus;
 import com.agrolink.services.OrderService;
+import com.agrolink.services.RetailerDashboardService;
 import com.agrolink.validations.CreateOrderRequestValidator;
 import jakarta.validation.Valid;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Everything a retailer does, from their side (as the buyer). */
 @Slf4j
 @RestController
 @RequestMapping("/retailer")
@@ -31,12 +33,25 @@ import java.util.List;
 @PreAuthorize("hasRole('RETAILER')")
 public class RetailerController extends BaseController {
 
+  @NonNull
   private final OrderService orderService;
+
+  @NonNull
   private final CreateOrderRequestValidator createOrderRequestValidator;
+
+  @NonNull
+  private final RetailerDashboardService retailerDashboardService;
 
   @InitBinder("createOrderRequest")
   void bindCreateOrderRequest(WebDataBinder binder) {
     binder.addValidators(createOrderRequestValidator);
+  }
+
+  @GetMapping("/dashboard")
+  public RetailerDashboardResponse dashboard() {
+    var retailer = loggedUser();
+    log.info("Building dashboard for retailer {}", retailer.id());
+    return retailerDashboardService.getDashboard(retailer);
   }
 
   @PostMapping("/orders")

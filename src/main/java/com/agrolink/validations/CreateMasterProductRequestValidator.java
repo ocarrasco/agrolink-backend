@@ -1,8 +1,8 @@
 package com.agrolink.validations;
 
-import com.agrolink.dto.CreateMasterProductRequest;
+import com.agrolink.dto.request.CreateMasterProductRequest;
 import com.agrolink.repositories.IMasterProductRepository;
-import com.agrolink.services.MasterProductService;
+import com.agrolink.utils.StrUtils;
 import com.agrolink.utils.UserMessages;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
-/**
- * Checks that the (normalized) product name is not already taken. {@code @NotBlank} / {@code @Size}
- * are left to bean validation.
- */
 @Component
 @RequiredArgsConstructor
 public class CreateMasterProductRequestValidator implements Validator {
@@ -33,7 +29,7 @@ public class CreateMasterProductRequestValidator implements Validator {
       return;
     }
 
-    String name = MasterProductService.normalizeName(request.name());
+    var name = StrUtils.normalizeName(request.name());
     masterProductRepository.findByNameIgnoreCase(name).ifPresent(existing ->
         errors.rejectValue("name", "masterProduct.name.duplicate", UserMessages.productNameTaken(name)));
   }

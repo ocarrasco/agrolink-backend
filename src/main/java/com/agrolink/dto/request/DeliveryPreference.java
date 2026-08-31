@@ -1,4 +1,4 @@
-package com.agrolink.dto;
+package com.agrolink.dto.request;
 
 import com.agrolink.model.enums.TimeSlot;
 import com.agrolink.model.enums.WeekDay;

@@ -1,7 +1,7 @@
 package com.agrolink.controllers;
 
-import com.agrolink.dto.UserResponse;
-import com.agrolink.dto.UserSyncResult;
+import com.agrolink.dto.response.UserResponse;
+import com.agrolink.dto.response.UserSyncResult;
 import com.agrolink.services.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.agrolink.dto;
+package com.agrolink.dto.request;
 
 import com.agrolink.model.WeeklyAvailability;
 import com.agrolink.utils.UserMessages;

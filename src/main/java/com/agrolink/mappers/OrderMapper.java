@@ -1,8 +1,8 @@
 package com.agrolink.mappers;
 
-import com.agrolink.dto.DeliveryPreference;
-import com.agrolink.dto.OrderItemResponse;
-import com.agrolink.dto.OrderResponse;
+import com.agrolink.dto.request.DeliveryPreference;
+import com.agrolink.dto.response.OrderItemResponse;
+import com.agrolink.dto.response.OrderResponse;
 import com.agrolink.model.OrderItemModel;
 import com.agrolink.model.OrderModel;
 import org.mapstruct.Mapper;
@@ -11,7 +11,7 @@ import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OrderMapper {
 
   @Mapping(target = "retailerId", source = "retailer.id")

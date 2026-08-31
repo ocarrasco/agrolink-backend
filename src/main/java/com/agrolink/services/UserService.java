@@ -1,13 +1,14 @@
 package com.agrolink.services;
 
 import com.agrolink.dto.KeycloakUserDto;
-import com.agrolink.dto.UserResponse;
-import com.agrolink.dto.UserSyncResult;
+import com.agrolink.dto.response.UserResponse;
+import com.agrolink.dto.response.UserSyncResult;
 import com.agrolink.mappers.UserMapper;
 import com.agrolink.model.UserModel;
 import com.agrolink.model.enums.UserRole;
 import com.agrolink.model.enums.UserStatus;
 import com.agrolink.repositories.IUserRepository;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,9 +23,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserService {
 
+  @NonNull
   private final IUserRepository userRepository;
+
+  @NonNull
   private final KeycloakService keycloakService;
+
+  @NonNull
   private final UserMapper userMapper;
+
+  @NonNull
   private final UserProfileService userProfileService;
 
   public Optional<UserModel> findActiveUserByKeycloakId(UUID keycloakId) {
@@ -32,10 +40,6 @@ public class UserService {
         .filter(user -> user.getStatus() == UserStatus.ACCEPTED);
   }
 
-  /**
-   * Lazy {@code platform_user} reference for setting a FK association without a SELECT.
-   * The id comes from {@link com.agrolink.security.LoggedUser}, so the row is known to exist.
-   */
   public UserModel getReference(Integer id) {
     return userRepository.getReferenceById(id);
   }
@@ -44,38 +48,17 @@ public class UserService {
     return userMapper.toResponseList(userRepository.findAll());
   }
 
-  /**
-   * Full provisioning from Keycloak (stands in for the admin's user-creation flow, out of scope):
-   * <ol>
-   *   <li>Upsert every non-admin Keycloak user into {@code platform_user}. Admins and role-less
-   *       users are skipped — {@code platform_user} only holds marketplace actors.</li>
-   *   <li>Mirror {@code role} (from the Keycloak realm roles) and {@code status} (enabled ->
-   *       ACCEPTED, disabled -> DECLINED) on every run.</li>
-   *   <li>Create a default {@code user_profile} for every {@code platform_user} that lacks one.</li>
-   * </ol>
-   * Users without an email are skipped (the column is NOT NULL).
-   */
   @Transactional
   public UserSyncResult syncFromKeycloak() {
     List<KeycloakUserDto> keycloakUsers = keycloakService.fetchAllUsers();
 
     int created = 0;
     int updated = 0;
-    int skipped = 0;
 
-    for (KeycloakUserDto kcUser : keycloakUsers) {
-      if (kcUser.email() == null || kcUser.email().isBlank()) {
-        log.warn("Skipping Keycloak user {} without email", kcUser.id());
-        skipped++;
-        continue;
-      }
+    var elegibleKcUserList = keycloakUsers.stream().filter(this::isEligibleForSync).toList();
+    int skipped = keycloakUsers.size() - elegibleKcUserList.size();
 
-      if (kcUser.role() == null || kcUser.role() == UserRole.ADMIN) {
-        // admins operate the platform, they are not marketplace actors; role-less users can't act
-        skipped++;
-        continue;
-      }
-
+    for (var kcUser : elegibleKcUserList) {
       Optional<UserModel> existing = userRepository.findByKeycloakId(kcUser.id());
       UserModel user = existing.orElseGet(UserModel::new);
 
@@ -91,11 +74,19 @@ public class UserService {
 
     List<Integer> allUserIds = userRepository.findAll().stream().map(UserModel::getId).toList();
     int userProfilesCreated = userProfileService.ensureProfilesFor(allUserIds);
-
-    UserSyncResult result =
-        new UserSyncResult(keycloakUsers.size(), created, updated, skipped, userProfilesCreated);
+    var result = new UserSyncResult(keycloakUsers.size(), created, updated, skipped, userProfilesCreated);
     log.info("Keycloak user sync finished: {}", result);
     return result;
+  }
+
+  private boolean isEligibleForSync(KeycloakUserDto kcUser) {
+    if (kcUser.email() == null || kcUser.email().isBlank()) {
+      log.warn("Skipping Keycloak user {} without email", kcUser.id());
+      return false;
+    }
+
+    // admins operate the platform, they are not marketplace actors; role-less users can't act
+    return kcUser.role() != null && kcUser.role() != UserRole.ADMIN;
   }
 
 }

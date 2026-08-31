@@ -1,6 +1,6 @@
 package com.agrolink.controllers;
 
-import com.agrolink.dto.SupplierResponse;
+import com.agrolink.dto.response.SupplierResponse;
 import com.agrolink.services.CatalogService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

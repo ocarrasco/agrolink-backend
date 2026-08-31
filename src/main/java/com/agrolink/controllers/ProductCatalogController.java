@@ -1,8 +1,8 @@
 package com.agrolink.controllers;
 
-import com.agrolink.dto.CatalogItemResponse;
-import com.agrolink.dto.CreateCatalogItemRequest;
-import com.agrolink.dto.UpdateCatalogItemRequest;
+import com.agrolink.dto.response.CatalogItemResponse;
+import com.agrolink.dto.request.CreateCatalogItemRequest;
+import com.agrolink.dto.request.UpdateCatalogItemRequest;
 import com.agrolink.services.CatalogItemService;
 import com.agrolink.validations.CreateCatalogItemRequestValidator;
 import jakarta.validation.Valid;

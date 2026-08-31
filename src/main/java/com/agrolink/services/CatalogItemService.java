@@ -1,15 +1,15 @@
 package com.agrolink.services;
 
-import com.agrolink.dto.CatalogItemResponse;
-import com.agrolink.dto.CreateCatalogItemRequest;
-import com.agrolink.dto.UpdateCatalogItemRequest;
+import com.agrolink.dto.response.CatalogItemResponse;
+import com.agrolink.dto.request.CreateCatalogItemRequest;
+import com.agrolink.dto.request.UpdateCatalogItemRequest;
 import com.agrolink.mappers.CatalogItemMapper;
 import com.agrolink.model.CatalogItemModel;
-import com.agrolink.model.MasterProductModel;
 import com.agrolink.repositories.ICatalogItemRepository;
 import com.agrolink.security.LoggedUser;
 import com.agrolink.utils.UserMessages;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,9 +20,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CatalogItemService {
 
+  @NonNull
   private final ICatalogItemRepository catalogItemRepository;
+
+  @NonNull
   private final CatalogItemMapper catalogItemMapper;
+
+  @NonNull
   private final MasterProductService masterProductService;
+
+  @NonNull
   private final UserService userService;
 
   public List<CatalogItemResponse> getCatalogItems(LoggedUser supplier) {
@@ -36,10 +43,7 @@ public class CatalogItemService {
 
   @Transactional
   public CatalogItemResponse create(LoggedUser supplier, CreateCatalogItemRequest request) {
-    // master product existence + active state are checked by CreateCatalogItemRequestValidator
-    MasterProductModel masterProduct = masterProductService.getEntity(request.masterProductId());
-    // "supplier already offers this product" needs the caller identity, so it stays here
-    // (also enforced by the catalog_item UNIQUE(supplier_id, master_product_id) constraint)
+    var masterProduct = masterProductService.getEntity(request.masterProductId());
     if (catalogItemRepository.existsBySupplierIdAndMasterProductId(supplier.id(), masterProduct.getId())) {
       throw new DuplicateResourceException(UserMessages.alreadyOffering(masterProduct.getName()));
     }
@@ -61,7 +65,6 @@ public class CatalogItemService {
     item.setPricePerUnit(request.pricePerUnit());
     item.setAvailableQuantity(request.availableQuantity());
     item.setActive(request.active());
-    // flush so @UpdateTimestamp is populated before we map the response
     return catalogItemMapper.toResponse(catalogItemRepository.saveAndFlush(item));
   }
 
@@ -73,7 +76,8 @@ public class CatalogItemService {
   }
 
   private CatalogItemModel findOwnedOrThrow(LoggedUser supplier, Integer id) {
-    return catalogItemRepository.findByIdAndSupplierId(id, supplier.id()).orElseThrow(() -> new EntityNotFoundException(UserMessages.catalogItemNotFound(id)));
+    return catalogItemRepository.findByIdAndSupplierId(id, supplier.id())
+        .orElseThrow(() -> new EntityNotFoundException(UserMessages.catalogItemNotFound(id)));
   }
 
 }

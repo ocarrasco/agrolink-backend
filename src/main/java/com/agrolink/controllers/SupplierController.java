@@ -1,8 +1,8 @@
 package com.agrolink.controllers;
 
-import com.agrolink.dto.OrderResponse;
-import com.agrolink.dto.RejectOrderRequest;
-import com.agrolink.dto.SupplierDashboardResponse;
+import com.agrolink.dto.response.OrderResponse;
+import com.agrolink.dto.request.RejectOrderRequest;
+import com.agrolink.dto.response.SupplierDashboardResponse;
 import com.agrolink.model.enums.OrderStatus;
 import com.agrolink.services.OrderService;
 import com.agrolink.services.SupplierDashboardService;

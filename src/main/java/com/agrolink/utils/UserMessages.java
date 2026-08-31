@@ -1,10 +1,5 @@
 package com.agrolink.utils;
 
-/**
- * Mensajes de error para el usuario final, en español. Tono <b>formal e impersonal</b>:
- * tercera persona / voz pasiva refleja, sin voseo ni trato directo ("no es posible…",
- * "la orden…", "debe…"). Los nuevos mensajes deben seguir ese registro.
- */
 public final class UserMessages {
 
   private UserMessages() {
@@ -35,25 +30,25 @@ public final class UserMessages {
   public static final String VALIDATION_FAILED = "Los datos enviados contienen errores de validación.";
 
   // ── Producto maestro ────────────────────────────────────────────
-  public static String masterProductNotFound(Object id) {
-    return "El producto " + id + " no existe.";
+  public static String masterProductNotFound(Integer id) {
+    return "El producto %d no existe.".formatted(id);
   }
 
   public static String productNameTaken(String name) {
-    return "Ya existe un producto con el nombre '" + name + "'.";
+    return "Ya existe un producto con el nombre '%s'.".formatted(name);
   }
 
   public static String productNotAvailable(String name) {
-    return "El producto '" + name + "' no está disponible.";
+    return "El producto '%s' no está disponible.".formatted(name);
   }
 
   // ── Catálogo del proveedor ──────────────────────────────────────
-  public static String catalogItemNotFound(Object id) {
-    return "El ítem de catálogo " + id + " no existe.";
+  public static String catalogItemNotFound(Integer id) {
+    return "El ítem de catálogo %d no existe.".formatted(id);
   }
 
   public static String alreadyOffering(String productName) {
-    return "El producto '" + productName + "' ya forma parte del catálogo.";
+    return "El producto '%s' ya forma parte del catálogo.".formatted(productName);
   }
 
   // ── Órdenes ─────────────────────────────────────────────────────
@@ -64,7 +59,7 @@ public final class UserMessages {
   public static final String PLATFORM_CARRIER_NOT_AVAILABLE = "El envío mediante transportista de la plataforma no está disponible por el momento.";
 
   public static String itemNoLongerAvailable(String productName) {
-    return "El producto '" + productName + "' ya no está disponible.";
+    return "El producto '%s' ya no está disponible.".formatted(productName);
   }
 
   public static String notEnoughStock(String productName, Object available, Object ordered) {
@@ -87,7 +82,7 @@ public final class UserMessages {
 
   // ── Sincronización con Keycloak ─────────────────────────────────
   public static String keycloakFetchFailed(String realm) {
-    return "No fue posible obtener los usuarios de Keycloak (realm " + realm + ").";
+    return "No fue posible obtener los usuarios de Keycloak (realm %s).".formatted(realm);
   }
 
 }

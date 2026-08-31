@@ -1,6 +1,6 @@
 package com.agrolink.validations;
 
-import com.agrolink.dto.CreateCatalogItemRequest;
+import com.agrolink.dto.request.CreateCatalogItemRequest;
 import com.agrolink.repositories.IMasterProductRepository;
 import com.agrolink.utils.UserMessages;
 import lombok.NonNull;
@@ -9,10 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
-/**
- * Checks that the referenced master product exists and is active. The (supplier, product)
- * uniqueness needs the caller identity and stays in {@code CatalogItemService}.
- */
 @Component
 @RequiredArgsConstructor
 public class CreateCatalogItemRequestValidator implements Validator {

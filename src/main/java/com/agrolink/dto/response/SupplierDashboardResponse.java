@@ -1,4 +1,4 @@
-package com.agrolink.dto;
+package com.agrolink.dto.response;
 
 import java.util.List;
 
@@ -8,16 +8,6 @@ public record SupplierDashboardResponse( //@formatter:off
     List<MonthlyAmount> salesTrend,
     List<ProductShare> topProducts
 ) { //@formatter:on
-
-    public record MonthOverMonth( //@formatter:off
-      long currentMonth,
-      long previousMonth,
-      long absoluteChange,
-      Integer percentChange,
-      Trend trend
-  ) { //@formatter:on
-
-    }
 
     public record MonthlyAmount(int year, int month, long amount) {
 
@@ -31,7 +21,5 @@ public record SupplierDashboardResponse( //@formatter:off
     ) { //@formatter:on
 
     }
-
-    public enum Trend {UP, DOWN, FLAT}
 
 }

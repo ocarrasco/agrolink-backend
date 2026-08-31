@@ -27,15 +27,14 @@
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
 
         <sonar.coverage.exclusions>
+            **/boostrap/**/*,
             **/config/*,
             **/dto/**/*,
-            **/boostrap/**/*,
+            **/model/**/*,
+            **/repositories/**/*,
+            **/security/*,
+            **/Main.java
         </sonar.coverage.exclusions>
-
-        <!-- bootstrap package is dev/demo scaffolding (startup seeders) — no unit tests -->
-        <sonar.exclusions>
-            **/boostrap/**/*,
-        </sonar.exclusions>
 
     </properties>
 
@@ -162,6 +161,9 @@
                                     <version>${org.mapstruct.version}</version>
                                 </path>
                             </annotationProcessorPaths>
+                            <compilerArgs>
+                                <arg>-Amapstruct.defaultComponentModel=spring</arg>
+                            </compilerArgs>
                         </configuration>
                     </execution>
                     <execution>
@@ -188,7 +190,29 @@
                                     <version>${org.mapstruct.version}</version>
                                 </path>
                             </annotationProcessorPaths>
+                            <compilerArgs>
+                                <arg>-Amapstruct.defaultComponentModel=spring</arg>
+                            </compilerArgs>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

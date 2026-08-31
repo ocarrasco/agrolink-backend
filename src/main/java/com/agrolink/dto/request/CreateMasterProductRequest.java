@@ -1,4 +1,4 @@
-package com.agrolink.dto;
+package com.agrolink.dto.request;
 
 import com.agrolink.model.enums.ProductUnit;
 import com.agrolink.utils.UserMessages;

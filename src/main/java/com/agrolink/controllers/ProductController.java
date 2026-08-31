@@ -1,6 +1,6 @@
 package com.agrolink.controllers;
 
-import com.agrolink.dto.ProductResponse;
+import com.agrolink.dto.response.ProductResponse;
 import com.agrolink.services.MasterProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

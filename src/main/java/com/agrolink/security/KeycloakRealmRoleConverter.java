@@ -1,6 +1,7 @@
 package com.agrolink.security;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -12,6 +13,7 @@ import java.util.Map;
 public class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
   @Override
+  @Nullable
   public Collection<GrantedAuthority> convert(Jwt jwt) {
     Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
 

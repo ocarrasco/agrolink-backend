@@ -1,5 +1,6 @@
-package com.agrolink.dto;
+package com.agrolink.dto.response;
 
+import com.agrolink.dto.request.DeliveryPreference;
 import com.agrolink.model.enums.OrderStatus;
 import com.agrolink.model.enums.ShippingMethod;
 

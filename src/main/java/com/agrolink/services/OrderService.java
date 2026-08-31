@@ -1,7 +1,7 @@
 package com.agrolink.services;
 
-import com.agrolink.dto.CreateOrderRequest;
-import com.agrolink.dto.OrderResponse;
+import com.agrolink.dto.request.CreateOrderRequest;
+import com.agrolink.dto.response.OrderResponse;
 import com.agrolink.events.OrderTerminatedEvent;
 import com.agrolink.mappers.OrderMapper;
 import com.agrolink.model.OrderItemModel;

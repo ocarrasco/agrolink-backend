@@ -1,8 +1,6 @@
-package com.agrolink.dto;
+package com.agrolink.dto.response;
 
 import com.agrolink.model.enums.ProductUnit;
-
-import java.time.LocalDateTime;
 
 public record CatalogItemResponse(
     Integer id,

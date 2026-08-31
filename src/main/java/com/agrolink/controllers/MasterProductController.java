@@ -1,8 +1,8 @@
 package com.agrolink.controllers;
 
-import com.agrolink.dto.CreateMasterProductRequest;
-import com.agrolink.dto.MasterProductResponse;
-import com.agrolink.dto.UpdateMasterProductRequest;
+import com.agrolink.dto.request.CreateMasterProductRequest;
+import com.agrolink.dto.response.MasterProductResponse;
+import com.agrolink.dto.request.UpdateMasterProductRequest;
 import com.agrolink.services.MasterProductService;
 import com.agrolink.validations.CreateMasterProductRequestValidator;
 import jakarta.validation.Valid;

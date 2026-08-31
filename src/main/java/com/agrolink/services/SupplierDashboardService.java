@@ -1,10 +1,9 @@
 package com.agrolink.services;
 
-import com.agrolink.dto.SupplierDashboardResponse;
-import com.agrolink.dto.SupplierDashboardResponse.MonthOverMonth;
-import com.agrolink.dto.SupplierDashboardResponse.MonthlyAmount;
-import com.agrolink.dto.SupplierDashboardResponse.ProductShare;
-import com.agrolink.dto.SupplierDashboardResponse.Trend;
+import com.agrolink.dto.response.MonthOverMonth;
+import com.agrolink.dto.response.SupplierDashboardResponse;
+import com.agrolink.dto.response.SupplierDashboardResponse.MonthlyAmount;
+import com.agrolink.dto.response.SupplierDashboardResponse.ProductShare;
 import com.agrolink.repositories.IOrderRepository;
 import com.agrolink.repositories.projections.MonthlyFulfilled;
 import com.agrolink.repositories.projections.ProductSales;
@@ -39,15 +38,17 @@ public class SupplierDashboardService {
     return build(supplier.id(), YearMonth.now(ZoneOffset.UTC));
   }
 
-  SupplierDashboardResponse build(Integer supplierId, YearMonth current) {
+  protected SupplierDashboardResponse build(Integer supplierId, YearMonth current) {
     YearMonth firstMonth = current.minusMonths(TREND_MONTHS - 1L);
     LocalDateTime since = firstMonth.atDay(1).atStartOfDay();
 
-    var byMonth = orderRepository.monthlyFulfilledSince(supplierId, since).stream().collect(Collectors.toMap(row -> YearMonth.of(row.getYr(), row.getMo()), Function.identity()));
+    var byMonth = orderRepository.monthlyFulfilledSince(supplierId, since)
+        .stream()
+        .collect(Collectors.toMap(row -> YearMonth.of(row.getYr(), row.getMo()), Function.identity()));
 
     YearMonth previous = current.minusMonths(1);
-    MonthOverMonth sales = compare(amountOf(byMonth, current), amountOf(byMonth, previous));
-    MonthOverMonth completedOrders = compare(countOf(byMonth, current), countOf(byMonth, previous));
+    MonthOverMonth sales = new MonthOverMonth(amountOf(byMonth, current), amountOf(byMonth, previous));
+    MonthOverMonth completedOrders = new MonthOverMonth(countOf(byMonth, current), countOf(byMonth, previous));
 
     List<MonthlyAmount> trend = new ArrayList<>(TREND_MONTHS);
     for (int i = 0; i < TREND_MONTHS; i++) {
@@ -60,11 +61,8 @@ public class SupplierDashboardService {
     return new SupplierDashboardResponse(sales, completedOrders, trend, topProducts);
   }
 
-  /**
-   * Top {@value #TOP_PRODUCTS} products by amount + an "Otros" bucket for the rest. Percentages
-   * are of the total; "Otros" absorbs the rounding drift so they always sum to 100.
-   */
-  private static List<ProductShare> topProducts(List<ProductSales> rows) {
+
+  private List<ProductShare> topProducts(List<ProductSales> rows) {
     long total = rows.stream().mapToLong(ProductSales::getAmount).sum();
     if (total == 0L) {
       return List.of();
@@ -88,21 +86,14 @@ public class SupplierDashboardService {
     return shares;
   }
 
-  private static long amountOf(Map<YearMonth, MonthlyFulfilled> byMonth, YearMonth month) {
+  private long amountOf(Map<YearMonth, MonthlyFulfilled> byMonth, YearMonth month) {
     MonthlyFulfilled row = byMonth.get(month);
     return row == null ? 0L : row.getAmount();
   }
 
-  private static long countOf(Map<YearMonth, MonthlyFulfilled> byMonth, YearMonth month) {
+  private long countOf(Map<YearMonth, MonthlyFulfilled> byMonth, YearMonth month) {
     MonthlyFulfilled row = byMonth.get(month);
     return row == null ? 0L : row.getOrderCount();
-  }
-
-  private static MonthOverMonth compare(long current, long previous) {
-    long absoluteChange = current - previous;
-    Integer percentChange = previous == 0L ? null : Math.toIntExact(Math.round(absoluteChange * 100.0 / previous));
-    Trend trend = current > previous ? Trend.UP : current < previous ? Trend.DOWN : Trend.FLAT;
-    return new MonthOverMonth(current, previous, absoluteChange, percentChange, trend);
   }
 
 }

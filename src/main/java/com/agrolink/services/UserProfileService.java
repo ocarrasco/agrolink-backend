@@ -1,12 +1,13 @@
 package com.agrolink.services;
 
-import com.agrolink.dto.UpdateUserProfileRequest;
-import com.agrolink.dto.UserProfileResponse;
+import com.agrolink.dto.request.UpdateUserProfileRequest;
+import com.agrolink.dto.response.UserProfileResponse;
 import com.agrolink.mappers.UserProfileMapper;
 import com.agrolink.model.UserProfileModel;
 import com.agrolink.model.WeeklyAvailability;
 import com.agrolink.repositories.IUserProfileRepository;
 import com.agrolink.security.LoggedUser;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,11 +17,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.agrolink.utils.StrUtils.blankToNull;
+
 @Service
 @RequiredArgsConstructor
 public class UserProfileService {
 
+  @NonNull
   private final IUserProfileRepository userProfileRepository;
+
+  @NonNull
   private final UserProfileMapper userProfileMapper;
 
   public UserProfileResponse getMine(LoggedUser user) {
@@ -49,13 +55,6 @@ public class UserProfileService {
     return userProfileMapper.toResponse(userProfileRepository.saveAndFlush(profile));
   }
 
-  /**
-   * Creates a default {@code user_profile} row for each of the given users that lacks one.
-   * Called by {@link UserService#syncFromKeycloak()} so every non-admin user is provisioned
-   * with a profile (stands in for the admin's user-provisioning flow). Idempotent.
-   *
-   * @return how many rows were created
-   */
   @Transactional
   public int ensureProfilesFor(Collection<Integer> userIds) {
     if (userIds == null || userIds.isEmpty()) {
@@ -78,10 +77,6 @@ public class UserProfileService {
 
     userProfileRepository.saveAll(toCreate);
     return toCreate.size();
-  }
-
-  private static String blankToNull(String value) {
-    return value == null || value.isBlank() ? null : value.trim();
   }
 
 }

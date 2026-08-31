@@ -1,11 +1,11 @@
 package com.agrolink.controllers;
 
-import com.agrolink.dto.OrderResponse;
-import com.agrolink.dto.SupplierDashboardResponse;
-import com.agrolink.dto.SupplierDashboardResponse.MonthOverMonth;
-import com.agrolink.dto.SupplierDashboardResponse.MonthlyAmount;
-import com.agrolink.dto.SupplierDashboardResponse.ProductShare;
-import com.agrolink.dto.SupplierDashboardResponse.Trend;
+import com.agrolink.dto.response.MonthOverMonth;
+import com.agrolink.dto.enums.Trend;
+import com.agrolink.dto.response.OrderResponse;
+import com.agrolink.dto.response.SupplierDashboardResponse;
+import com.agrolink.dto.response.SupplierDashboardResponse.MonthlyAmount;
+import com.agrolink.dto.response.SupplierDashboardResponse.ProductShare;
 import com.agrolink.model.enums.OrderStatus;
 import com.agrolink.model.enums.ShippingMethod;
 import com.agrolink.model.enums.UserRole;

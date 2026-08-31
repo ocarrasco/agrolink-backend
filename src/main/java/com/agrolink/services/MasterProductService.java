@@ -1,26 +1,31 @@
 package com.agrolink.services;
 
-import com.agrolink.dto.CreateMasterProductRequest;
-import com.agrolink.dto.MasterProductResponse;
-import com.agrolink.dto.ProductResponse;
-import com.agrolink.dto.UpdateMasterProductRequest;
+import com.agrolink.dto.request.CreateMasterProductRequest;
+import com.agrolink.dto.request.UpdateMasterProductRequest;
+import com.agrolink.dto.response.MasterProductResponse;
+import com.agrolink.dto.response.ProductResponse;
 import com.agrolink.mappers.MasterProductMapper;
 import com.agrolink.model.MasterProductModel;
 import com.agrolink.repositories.IMasterProductRepository;
 import com.agrolink.utils.UserMessages;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+
+import static com.agrolink.utils.StrUtils.normalizeName;
 
 @Service
 @RequiredArgsConstructor
 public class MasterProductService {
 
+  @NonNull
   private final IMasterProductRepository masterProductRepository;
+
+  @NonNull
   private final MasterProductMapper masterProductMapper;
 
   public List<MasterProductResponse> list(boolean includeInactive) {
@@ -34,7 +39,9 @@ public class MasterProductService {
     return masterProductMapper.toResponse(getEntity(id));
   }
 
-  /** Trimmed list of active products, for suppliers / retailers (see {@code ProductController}). */
+  /**
+   * Trimmed list of active products, for suppliers / retailers (see {@code ProductController}).
+   */
   public List<ProductResponse> listActive() {
     return masterProductMapper.toBasicList(masterProductRepository.findByActiveTrueOrderByNameAsc());
   }
@@ -80,15 +87,10 @@ public class MasterProductService {
   }
 
   private void requireNameAvailable(String name, Integer selfId) {
-    Optional<MasterProductModel> existing = masterProductRepository.findByNameIgnoreCase(name);
+    var existing = masterProductRepository.findByNameIgnoreCase(name);
     if (existing.isPresent() && !existing.get().getId().equals(selfId)) {
       throw new DuplicateResourceException(UserMessages.productNameTaken(name));
     }
-  }
-
-  /** Trim + collapse internal whitespace. Shared with {@code CreateMasterProductRequestValidator}. */
-  public static String normalizeName(String raw) {
-    return raw.trim().replaceAll("\\s+", " ");
   }
 
 }

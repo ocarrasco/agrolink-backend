@@ -1,6 +1,6 @@
 package com.agrolink.controllers;
 
-import com.agrolink.dto.MasterProductResponse;
+import com.agrolink.dto.response.MasterProductResponse;
 import com.agrolink.model.enums.ProductUnit;
 import com.agrolink.model.enums.UserRole;
 import com.agrolink.security.LoggedUserJwtAuthenticationConverter;

@@ -1,7 +1,7 @@
 package com.agrolink.services;
 
-import com.agrolink.dto.SupplierDashboardResponse;
-import com.agrolink.dto.SupplierDashboardResponse.Trend;
+import com.agrolink.dto.enums.Trend;
+import com.agrolink.dto.response.SupplierDashboardResponse;
 import com.agrolink.repositories.IOrderRepository;
 import com.agrolink.repositories.projections.MonthlyFulfilled;
 import com.agrolink.repositories.projections.ProductSales;
@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Month;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -29,7 +30,7 @@ class SupplierDashboardServiceTest {
   @InjectMocks
   private SupplierDashboardService service;
 
-  private static final YearMonth AUG = YearMonth.of(2026, 8);
+  private static final YearMonth AUG = YearMonth.of(2026, Month.AUGUST);
 
   @org.junit.jupiter.api.BeforeEach
   void noProductSalesByDefault() {
@@ -63,7 +64,7 @@ class SupplierDashboardServiceTest {
     SupplierDashboardResponse dashboard = service.build(1, AUG);
 
     assertThat(dashboard.sales().previousMonth()).isZero();
-    assertThat(dashboard.sales().percentChange()).isNull(); // no se puede % contra 0
+    assertThat(dashboard.sales().percentChange()).isNull();
     assertThat(dashboard.sales().trend()).isEqualTo(Trend.UP);
     assertThat(dashboard.salesTrend()).extracting(SupplierDashboardResponse.MonthlyAmount::amount).containsExactly(0L, 0L, 300_000L);
   }
@@ -113,7 +114,7 @@ class SupplierDashboardServiceTest {
   }
 
   @Test
-  void ranksTheTop3ProductsAndBucketsTheRestAsOtros() {
+  void ranksTheTop3ProductsAndBucketsTheRestAsOthers() {
     when(orderRepository.productSales(1)).thenReturn(List.of(
         productRow(10, "Tomate", 600_000),
         productRow(20, "Papa", 300_000),
@@ -135,7 +136,7 @@ class SupplierDashboardServiceTest {
   }
 
   @Test
-  void topProductsHasNoOtrosWhenThereAre3OrFewerProducts() {
+  void topProductsHasNoOthersWhenThereAre3OrFewerProducts() {
     when(orderRepository.productSales(1)).thenReturn(List.of(
         productRow(10, "Tomate", 700_000),
         productRow(20, "Papa", 300_000)));

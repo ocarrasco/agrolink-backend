@@ -1,4 +1,4 @@
-package com.agrolink.dto;
+package com.agrolink.dto.response;
 
 import com.agrolink.model.enums.UserRole;
 import com.agrolink.model.enums.UserStatus;

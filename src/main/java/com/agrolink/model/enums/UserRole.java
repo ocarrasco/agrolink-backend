@@ -6,26 +6,19 @@ public enum UserRole {
 
   ADMIN, SUPPLIER, RETAILER, CARRIER;
 
-  /**
-   * Spring Security authority for this role, e.g. {@code ROLE_ADMIN}.
-   */
+  static final String ROLE_PREFIX = "ROLE_";
+
   public String authority() {
-    return "ROLE_" + name();
+    return ROLE_PREFIX + name();
   }
 
-  /**
-   * Maps a {@code ROLE_*} authority back to a role, empty if it is not one of ours.
-   */
   public static Optional<UserRole> fromAuthority(String authority) {
-    if (authority == null || !authority.startsWith("ROLE_")) {
+    if (authority == null || !authority.startsWith(ROLE_PREFIX)) {
       return Optional.empty();
     }
-    return fromName(authority.substring("ROLE_".length()));
+    return fromName(authority.substring(ROLE_PREFIX.length()));
   }
 
-  /**
-   * Maps a bare role name (e.g. a Keycloak realm role) to a role, empty if it is not one of ours.
-   */
   public static Optional<UserRole> fromName(String name) {
     try {
       return Optional.of(valueOf(name));
