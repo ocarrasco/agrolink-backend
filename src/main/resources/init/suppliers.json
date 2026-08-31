@@ -1,0 +1,42 @@
+[
+  {
+    "email": "supplier@example.com",
+    "contactName": "Juan Pérez",
+    "address": "Av. Siempre Viva 123, Quillota",
+    "phone": "+56 9 2345 6789",
+    "delivery": true,
+    "availability": {
+      "monday": ["AM", "PM"],
+      "tuesday": ["AM"],
+      "friday": ["AM", "PM"]
+    },
+    "catalogSize": 9
+  },
+  {
+    "email": "supplier2@example.com",
+    "contactName": "Antonio Pérez",
+    "address": "KM 24.7 Camino El Toro, La Cruz",
+    "phone": "+56 9 9876 5432",
+    "delivery": false,
+    "availability": {
+      "monday": ["AM"],
+      "tuesday": ["AM"],
+      "friday": ["AM", "PM"],
+      "saturday": ["AM", "PM"]
+    },
+    "catalogSize": 6
+  },
+  {
+    "email": "supplier3@example.com",
+    "contactName": "María González",
+    "address": "Parcela 12, Sector El Melón, Nogales",
+    "phone": "+56 9 5544 3322",
+    "delivery": true,
+    "availability": {
+      "wednesday": ["AM", "PM"],
+      "thursday": ["AM", "PM"],
+      "saturday": ["AM"]
+    },
+    "catalogSize": 12
+  }
+]

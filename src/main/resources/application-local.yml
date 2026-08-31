@@ -1,0 +1,52 @@
+server:
+  port: 9090
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/agrolink
+    username: postgres
+    password: postgres
+    hikari:
+      pool-name: AgroLinkPool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  flyway:
+    # base migrations + dev-only seed data (classpath:seed = repeatable R__ scripts)
+    locations: classpath:migration,classpath:seed
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/AgroLink
+
+keycloak:
+  admin:
+    server-url: http://localhost:8080
+    realm: AgroLink
+    client-id: agro-link-backend-admin
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:agro-link-backend-admin-secret}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    tags:
+      application: agro-link-backend

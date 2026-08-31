@@ -1,0 +1,59 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/agrolink}
+    username: ${DB_USERNAME:agrolink}
+    password: ${DB_PASSWORD:agrolink}
+    hikari:
+      pool-name: AgroLinkPool
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  flyway:
+    locations: classpath:migration
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/AgroLink}
+
+keycloak:
+  admin:
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+    realm: ${KEYCLOAK_REALM:AgroLink}
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:agro-link-backend-admin}
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
+
+agrolink:
+  startup-sync:
+    # pull the Keycloak roster into platform_user on ApplicationReadyEvent (StartupUserSync)
+    enabled: ${AGROLINK_STARTUP_SYNC_ENABLED:true}
+  startup-seed:
+    # fill unconfigured user_profile rows from init/suppliers.json (StartupProfileSeeder)
+    enabled: ${AGROLINK_STARTUP_SEED_ENABLED:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    tags:
+      application: agro-link-backend
