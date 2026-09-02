@@ -6,11 +6,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-/**
- * Convenience base for controllers that act on behalf of the authenticated platform user.
- * {@link com.agrolink.security.LoggedUserJwtAuthenticationConverter} makes the principal a
- * {@link LoggedUser} on every authenticated request.
- */
 public abstract class BaseController {
 
   protected LoggedUser loggedUser() {

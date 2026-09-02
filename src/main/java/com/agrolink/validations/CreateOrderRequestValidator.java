@@ -49,10 +49,7 @@ public class CreateOrderRequestValidator implements Validator {
 
   private void validateShippingMethod(CreateOrderRequest request, Errors errors) {
     var method = request.shippingMethod();
-    if (method == ShippingMethod.PLATFORM_CARRIER) {
-      errors.rejectValue("shippingMethod", "order.shipping.platformCarrierUnavailable",
-          UserMessages.PLATFORM_CARRIER_NOT_AVAILABLE);
-    } else if (method == ShippingMethod.SUPPLIER_DELIVERY) {
+    if (method == ShippingMethod.SUPPLIER_DELIVERY) {
       boolean offersDelivery = userProfileRepository.findByUserId(request.supplierId())
           .map(UserProfileModel::isDelivery)
           .orElse(false);

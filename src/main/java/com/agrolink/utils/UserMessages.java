@@ -56,7 +56,14 @@ public final class UserMessages {
   public static final String ORDER_PRODUCTS_NOT_OFFERED = "El proveedor no ofrece uno o más de los productos indicados.";
   public static final String ORDER_WITH_YOURSELF = "El comprador y el proveedor de una orden deben ser usuarios distintos.";
   public static final String SUPPLIER_HAS_NO_DELIVERY = "El proveedor seleccionado no ofrece despacho propio; solo admite retiro en finca.";
-  public static final String PLATFORM_CARRIER_NOT_AVAILABLE = "El envío mediante transportista de la plataforma no está disponible por el momento.";
+  public static final String ORDER_NOT_AWAITING_TRANSPORT = "La orden no está esperando un transportista de la plataforma.";
+  public static final String PLATFORM_CARRIER_FULFILL_BY_CARRIER = "La entrega de esta orden la confirma el transportista asignado.";
+  public static final String TRANSPORT_NOT_ASSIGNED = "El transporte de esta orden no está listo para iniciar el retiro.";
+  public static final String TRANSPORT_NOT_IN_TRANSIT = "El transporte de esta orden no está en tránsito.";
+
+  public static String carrierNotInterested(Integer carrierId) {
+    return "El transportista %d no manifestó interés en esta orden.".formatted(carrierId);
+  }
 
   public static String itemNoLongerAvailable(String productName) {
     return "El producto '%s' ya no está disponible.".formatted(productName);

@@ -19,6 +19,8 @@ public interface OrderMapper {
   @Mapping(target = "supplierId", source = "supplier.id")
   @Mapping(target = "supplierName", source = "supplier.name")
   @Mapping(target = "deliveryPreference", expression = "java(deliveryPreferenceOf(order))")
+  @Mapping(target = "carrierId", source = "carrier.id")
+  @Mapping(target = "carrierName", source = "carrier.name")
   OrderResponse toResponse(OrderModel order);
 
   List<OrderResponse> toResponseList(List<OrderModel> orders);

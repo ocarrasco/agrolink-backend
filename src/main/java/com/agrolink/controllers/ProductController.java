@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * The master product catalog as seen by suppliers / retailers: active products only, trimmed to
+ * The master product catalog as seen by suppliers / retailers.json: active products only, trimmed to
  * {@code id / name / unit}. Admin management is {@code /master-products} ({@code MasterProductController}).
  */
 @Slf4j

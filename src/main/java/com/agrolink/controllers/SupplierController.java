@@ -38,10 +38,12 @@ public class SupplierController extends BaseController {
   }
 
   @GetMapping("/orders")
-  public List<OrderResponse> listOrders(@RequestParam(required = false) OrderStatus status) {
+  public List<OrderResponse> listOrders(@RequestParam(required = false) OrderStatus status,
+                                        @RequestParam(required = false) Integer year,
+                                        @RequestParam(required = false) Integer month) {
     var supplier = loggedUser();
-    log.info("Listing sales for supplier {} (status={})", supplier.id(), status);
-    return orderService.listForSupplier(supplier, status);
+    log.info("Listing sales for supplier {} (status={}, year={}, month={})", supplier.id(), status, year, month);
+    return orderService.listForSupplier(supplier, status, year, month);
   }
 
   @GetMapping("/orders/{id}")

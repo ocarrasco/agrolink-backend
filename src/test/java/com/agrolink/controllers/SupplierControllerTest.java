@@ -59,12 +59,26 @@ class SupplierControllerTest extends ControllerTestSupport {
 
   @Test
   void shouldListMySales() throws Exception {
-    when(orderService.listForSupplier(any(), any())).thenReturn(List.of());
+    when(orderService.listForSupplier(any(), any(), any(), any())).thenReturn(List.of());
 
     mockMvc.perform(get("/supplier/orders").with(loggedAs(UserRole.SUPPLIER)))
         .andExpect(status().isOk());
 
-    verify(orderService).listForSupplier(any(), any());
+    verify(orderService).listForSupplier(any(), isNull(), isNull(), isNull());
+  }
+
+  @Test
+  void shouldForwardStatusYearAndMonthFilters() throws Exception {
+    when(orderService.listForSupplier(any(), any(), any(), any())).thenReturn(List.of());
+
+    mockMvc.perform(get("/supplier/orders")
+            .param("status", "FULFILLED")
+            .param("year", "2026")
+            .param("month", "8")
+            .with(loggedAs(UserRole.SUPPLIER)))
+        .andExpect(status().isOk());
+
+    verify(orderService).listForSupplier(any(), eq(OrderStatus.FULFILLED), eq(2026), eq(8));
   }
 
   @Test
@@ -153,7 +167,7 @@ class SupplierControllerTest extends ControllerTestSupport {
 
   private static OrderResponse sampleOrder(OrderStatus status) {
     return new OrderResponse(7, status, 1, "Verdulería Belgrano", 2, "Finca Los Andes",
-        120000, null, ShippingMethod.PICKUP, null, List.of(), LocalDateTime.now(), LocalDateTime.now());
+        120000, null, ShippingMethod.PICKUP, null, null, null, null, List.of(), LocalDateTime.now(), LocalDateTime.now());
   }
 
 }

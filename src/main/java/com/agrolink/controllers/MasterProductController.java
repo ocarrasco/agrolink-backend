@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Admin management of the master product catalog. Suppliers / retailers use {@code /products}. */
+/** Admin management of the master product catalog. Suppliers / retailers.json use {@code /products}. */
 @Slf4j
 @RestController
 @RequestMapping("/master-products")

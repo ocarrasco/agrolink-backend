@@ -2,9 +2,12 @@ package com.agrolink.controllers;
 
 import com.agrolink.dto.request.CreateOrderRequest;
 import com.agrolink.dto.response.OrderResponse;
+import com.agrolink.dto.response.OrderSuggestionResponse;
 import com.agrolink.dto.response.RetailerDashboardResponse;
+import com.agrolink.dto.response.TransportInterestResponse;
 import com.agrolink.model.enums.OrderStatus;
 import com.agrolink.services.OrderService;
+import com.agrolink.services.OrderSuggestionService;
 import com.agrolink.services.RetailerDashboardService;
 import com.agrolink.validations.CreateOrderRequestValidator;
 import jakarta.validation.Valid;
@@ -42,6 +45,9 @@ public class RetailerController extends BaseController {
   @NonNull
   private final RetailerDashboardService retailerDashboardService;
 
+  @NonNull
+  private final OrderSuggestionService orderSuggestionService;
+
   @InitBinder("createOrderRequest")
   void bindCreateOrderRequest(WebDataBinder binder) {
     binder.addValidators(createOrderRequestValidator);
@@ -54,6 +60,13 @@ public class RetailerController extends BaseController {
     return retailerDashboardService.getDashboard(retailer);
   }
 
+  /** Purchase suggestions ("qué conviene pedir"). Placeholder heuristic — see {@code design_plan.md} iteración 6. */
+  @GetMapping("/order-suggestions")
+  public List<OrderSuggestionResponse> orderSuggestions() {
+    var retailer = loggedUser();
+    return orderSuggestionService.suggestForRetailer(retailer);
+  }
+
   @PostMapping("/orders")
   @ResponseStatus(HttpStatus.CREATED)
   public OrderResponse placeOrder(@Valid @RequestBody CreateOrderRequest request) {
@@ -64,10 +77,12 @@ public class RetailerController extends BaseController {
   }
 
   @GetMapping("/orders")
-  public List<OrderResponse> listOrders(@RequestParam(required = false) OrderStatus status) {
+  public List<OrderResponse> listOrders(@RequestParam(required = false) OrderStatus status,
+                                         @RequestParam(required = false) Integer year,
+                                         @RequestParam(required = false) Integer month) {
     var retailer = loggedUser();
-    log.info("Listing orders for retailer {} (status={})", retailer.id(), status);
-    return orderService.listForRetailer(retailer, status);
+    log.info("Listing orders for retailer {} (status={}, year={}, month={})", retailer.id(), status, year, month);
+    return orderService.listForRetailer(retailer, status, year, month);
   }
 
   @GetMapping("/orders/{id}")
@@ -82,6 +97,21 @@ public class RetailerController extends BaseController {
     var retailer = loggedUser();
     log.info("Retailer {} cancelling order {}", retailer.id(), id);
     return orderService.cancel(retailer, id);
+  }
+
+  /** Carriers who marked interest in transporting this order. */
+  @GetMapping("/orders/{id}/transport-interests")
+  public List<TransportInterestResponse> listTransportInterests(@PathVariable Integer id) {
+    var retailer = loggedUser();
+    log.info("Retailer {} listing transport interests for order {}", retailer.id(), id);
+    return orderService.listTransportInterests(retailer, id);
+  }
+
+  @PostMapping("/orders/{id}/transport/{carrierId}/accept")
+  public OrderResponse acceptCarrier(@PathVariable Integer id, @PathVariable Integer carrierId) {
+    var retailer = loggedUser();
+    log.info("Retailer {} accepting carrier {} for order {}", retailer.id(), carrierId, id);
+    return orderService.acceptCarrier(retailer, id, carrierId);
   }
 
 }

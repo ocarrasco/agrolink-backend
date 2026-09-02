@@ -1,5 +1,7 @@
 package com.agrolink.boostrap;
 
+import com.agrolink.boostrap.dto.SeedStatus;
+import com.agrolink.boostrap.dto.SupplierSeed;
 import com.agrolink.model.CatalogItemModel;
 import com.agrolink.model.MasterProductModel;
 import com.agrolink.model.UserProfileModel;
@@ -24,15 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Bootstrap-only. Reads {@code init/suppliers.json} and applies each entry to the DB: fills the
- * supplier's <b>unconfigured</b> {@code user_profile} and gives it a random starter catalog so
- * the platform is usable out of the box. Everything here is dev/demo scaffolding — it lives in
- * the {@code boostrap} package so it doesn't clutter the real domain services.
- * <p>
- * Called by {@link StartupSupplierSeeder} once per app start. Both operations are idempotent
- * (skip anything the supplier has already touched).
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -47,27 +40,33 @@ public class SupplierSeedService {
 
   @NonNull
   private final ObjectMapper objectMapper;
+
   @NonNull
   private final IUserRepository userRepository;
+
   @NonNull
   private final IUserProfileRepository userProfileRepository;
+
   @NonNull
   private final IMasterProductRepository masterProductRepository;
+
   @NonNull
   private final ICatalogItemRepository catalogItemRepository;
 
-  /** Parsed entries of the seed file; empty list when the file is absent. */
+  /**
+   * Parsed entries of the seed file; empty list when the file is absent.
+   */
   List<SupplierSeed> load() throws IOException {
     ClassPathResource resource = new ClassPathResource(SEED_FILE);
     if (!resource.exists()) {
       return List.of();
     }
     try (InputStream in = resource.getInputStream()) {
-      return objectMapper.readValue(in, new TypeReference<List<SupplierSeed>>() {});
+      return objectMapper.readValue(in, new TypeReference<List<SupplierSeed>>() {
+      });
     }
   }
 
-  /** Applies one seed entry. One transaction per supplier. */
   @Transactional
   public Outcome seedSupplier(SupplierSeed seed) {
     if (seed.email() == null || seed.email().isBlank()) {
@@ -143,7 +142,7 @@ public class SupplierSeedService {
         || profile.getPhone() != null
         || profile.getContactName() != null
         || (profile.getAvailability() != null
-            && !profile.getAvailability().normalized().equals(WeeklyAvailability.empty()));
+        && !profile.getAvailability().normalized().equals(WeeklyAvailability.empty()));
   }
 
   private static String blankToNull(String value) {
@@ -153,8 +152,6 @@ public class SupplierSeedService {
   private static int roundTo(int value, int step) {
     return Math.max(step, (value / step) * step);
   }
-
-  enum SeedStatus {SEEDED, SKIPPED_BLANK_EMAIL, UNMATCHED}
 
   record Outcome(SeedStatus status, boolean profileWritten, int catalogItems) {
 

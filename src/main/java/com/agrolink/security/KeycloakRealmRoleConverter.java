@@ -13,8 +13,7 @@ import java.util.Map;
 public class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
   @Override
-  @Nullable
-  public Collection<GrantedAuthority> convert(Jwt jwt) {
+  public @Nullable Collection<GrantedAuthority> convert(Jwt jwt) {
     Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
 
     if (realmAccess == null || !(realmAccess.get("roles") instanceof List<?> roles)) {

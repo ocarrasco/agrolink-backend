@@ -1,9 +1,9 @@
 package com.agrolink.model.enums;
 
 /**
- * How an order gets from the supplier to the retailer.
- * <p>
- * {@code PLATFORM_CARRIER} is declared but not usable yet — see {@code transporte_carrier.md}.
+ * How an order gets from the supplier to the retailer. For {@code PLATFORM_CARRIER} the transport
+ * leg is tracked separately on {@code purchase_order.transport_status} — see
+ * {@code transporte_carrier.md}.
  */
 public enum ShippingMethod {
 
@@ -13,7 +13,7 @@ public enum ShippingMethod {
   /** Supplier delivers with their own logistics (only if {@code user_profile.delivery = true}). */
   SUPPLIER_DELIVERY,
 
-  /** Platform carrier — not available yet. */
+  /** An independent platform carrier picked from the open market carries it. */
   PLATFORM_CARRIER
 
 }

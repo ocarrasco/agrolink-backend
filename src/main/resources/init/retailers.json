@@ -1,0 +1,48 @@
+[
+  {
+    "email": "retailer@example.com",
+    "contactName": "Don Julio",
+    "address": "Los nogales 445, Villa la estrella",
+    "delivery": false,
+    "availability": {
+      "monday": ["AM", "PM"],
+      "tuesday": ["AM"],
+      "friday": ["AM", "PM"]
+    },
+    "orderGeneration": {
+      "monthsBack": 3,
+      "ordersPerMonth": 10
+    }
+  },
+  {
+    "email": "retailer2@example.com",
+    "contactName": "Doña Marisol",
+    "address": "Av. Providencia 2340, Local 5, Providencia",
+    "delivery": true,
+    "availability": {
+      "monday": ["AM"],
+      "wednesday": ["AM", "PM"],
+      "thursday": ["PM"],
+      "saturday": ["AM"]
+    },
+    "orderGeneration": {
+      "monthsBack": 3,
+      "ordersPerMonth": 10
+    }
+  },
+  {
+    "email": "retailer3@example.com",
+    "contactName": "Carlos Fuentes",
+    "address": "Calle Comercio 812, San Bernardo",
+    "delivery": false,
+    "availability": {
+      "tuesday": ["AM", "PM"],
+      "friday": ["AM"],
+      "saturday": ["AM", "PM"]
+    },
+    "orderGeneration": {
+      "monthsBack": 3,
+      "ordersPerMonth": 10
+    }
+  }
+]

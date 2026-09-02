@@ -11,6 +11,12 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
   flyway:
+    # Separate migration credentials (DDL) from the runtime pool above (DML only) — see
+    # docs/deployment.md step 4. Defaults to the same datasource when unset, so local/dev
+    # (single DB user) keeps working unchanged.
+    url: ${FLYWAY_URL:${spring.datasource.url}}
+    user: ${FLYWAY_USERNAME:${spring.datasource.username}}
+    password: ${FLYWAY_PASSWORD:${spring.datasource.password}}
     locations: classpath:migration
   jpa:
     open-in-view: false

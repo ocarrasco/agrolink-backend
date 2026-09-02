@@ -51,9 +51,9 @@ class OrderStockListenerTest {
   @Test
   void shouldThrowWhenOrderNotFound() {
     when(orderRepository.findWithItemsById(99)).thenReturn(Optional.empty());
+    var event = new OrderTerminatedEvent(99, OrderStatus.REJECTED);
 
-    assertThatThrownBy(() ->
-        listener.releaseReservedStock(new OrderTerminatedEvent(99, OrderStatus.REJECTED)))
+    assertThatThrownBy(() -> listener.releaseReservedStock(event))
         .isInstanceOf(EntityNotFoundException.class);
   }
 

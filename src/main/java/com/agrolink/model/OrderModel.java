@@ -3,6 +3,7 @@ package com.agrolink.model;
 import com.agrolink.model.enums.OrderStatus;
 import com.agrolink.model.enums.ShippingMethod;
 import com.agrolink.model.enums.TimeSlot;
+import com.agrolink.model.enums.TransportStatus;
 import com.agrolink.model.enums.WeekDay;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -52,9 +53,22 @@ public class OrderModel {
   @JoinColumn(name = "supplier_id", nullable = false)
   private UserModel supplier;
 
+  /** Assigned platform carrier — only set once the retailer accepts one's interest. Null otherwise. */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "carrier_id")
+  private UserModel carrier;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)
   private OrderStatus status;
+
+  /**
+   * Transport-leg sub-state — only set for {@code shippingMethod = PLATFORM_CARRIER} (null
+   * otherwise). Drives the carrier open market + execution; see {@code transporte_carrier.md}.
+   */
+  @Enumerated(EnumType.STRING)
+  @Column(name = "transport_status", length = 20)
+  private TransportStatus transportStatus;
 
   /** Order total in CLP, sum of the line totals. */
   @Column(name = "total", nullable = false)

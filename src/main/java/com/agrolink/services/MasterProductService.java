@@ -40,7 +40,7 @@ public class MasterProductService {
   }
 
   /**
-   * Trimmed list of active products, for suppliers / retailers (see {@code ProductController}).
+   * Trimmed list of active products, for suppliers / retailers.json (see {@code ProductController}).
    */
   public List<ProductResponse> listActive() {
     return masterProductMapper.toBasicList(masterProductRepository.findByActiveTrueOrderByNameAsc());

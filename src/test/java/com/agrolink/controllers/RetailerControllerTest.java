@@ -9,7 +9,10 @@ import com.agrolink.model.enums.ShippingMethod;
 import com.agrolink.model.enums.UserRole;
 import com.agrolink.security.LoggedUserJwtAuthenticationConverter;
 import com.agrolink.security.SecurityConfig;
+import com.agrolink.dto.response.OrderSuggestionResponse;
+import com.agrolink.model.enums.ProductUnit;
 import com.agrolink.services.OrderService;
+import com.agrolink.services.OrderSuggestionService;
 import com.agrolink.services.RetailerDashboardService;
 import com.agrolink.validations.CreateOrderRequestValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +30,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -48,6 +52,9 @@ class RetailerControllerTest extends ControllerTestSupport {
 
   @MockBean
   private RetailerDashboardService retailerDashboardService;
+
+  @MockBean
+  private OrderSuggestionService orderSuggestionService;
 
   // SecurityConfig constructor dependency; its UserService dep is outside the web slice
   @MockBean
@@ -127,17 +134,51 @@ class RetailerControllerTest extends ControllerTestSupport {
 
   @Test
   void shouldListMyOrders() throws Exception {
-    when(orderService.listForRetailer(any(), any())).thenReturn(List.of());
+    when(orderService.listForRetailer(any(), any(), any(), any())).thenReturn(List.of());
 
     mockMvc.perform(get("/retailer/orders").with(loggedAs(UserRole.RETAILER)))
         .andExpect(status().isOk());
 
-    verify(orderService).listForRetailer(any(), any());
+    verify(orderService).listForRetailer(any(), isNull(), isNull(), isNull());
+  }
+
+  @Test
+  void shouldForwardStatusYearAndMonthFilters() throws Exception {
+    when(orderService.listForRetailer(any(), any(), any(), any())).thenReturn(List.of());
+
+    mockMvc.perform(get("/retailer/orders")
+            .param("status", "PLACED")
+            .param("year", "2026")
+            .param("month", "9")
+            .with(loggedAs(UserRole.RETAILER)))
+        .andExpect(status().isOk());
+
+    verify(orderService).listForRetailer(any(), eq(OrderStatus.PLACED), eq(2026), eq(9));
   }
 
   @Test
   void shouldRejectListForNonRetailer() throws Exception {
     mockMvc.perform(get("/retailer/orders").with(loggedAs(UserRole.SUPPLIER)))
+        .andExpect(status().isForbidden());
+
+    verifyNoInteractions(orderService);
+  }
+
+  @Test
+  void shouldGetOneOrder() throws Exception {
+    when(orderService.getForRetailer(any(), eq(7))).thenReturn(sampleOrder(OrderStatus.CONFIRMED));
+
+    mockMvc.perform(get("/retailer/orders/{id}", 7).with(loggedAs(UserRole.RETAILER)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(7))
+        .andExpect(jsonPath("$.status").value("CONFIRMED"));
+
+    verify(orderService).getForRetailer(any(), eq(7));
+  }
+
+  @Test
+  void shouldRejectGetOneOrderForNonRetailer() throws Exception {
+    mockMvc.perform(get("/retailer/orders/{id}", 7).with(loggedAs(UserRole.SUPPLIER)))
         .andExpect(status().isForbidden());
 
     verifyNoInteractions(orderService);
@@ -154,9 +195,50 @@ class RetailerControllerTest extends ControllerTestSupport {
     verify(orderService).cancel(any(), eq(7));
   }
 
-  private static OrderResponse sampleOrder(OrderStatus status) {
+  @Test
+  void shouldReturnOrderSuggestions() throws Exception {
+    when(orderSuggestionService.suggestForRetailer(any())).thenReturn(List.of(
+        new OrderSuggestionResponse(10, "Tomate", ProductUnit.KILOGRAMO, 8, 3, 12, 1500)));
+
+    mockMvc.perform(get("/retailer/order-suggestions").with(loggedAs(UserRole.RETAILER)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].productName").value("Tomate"))
+        .andExpect(jsonPath("$[0].suggestedQuantity").value(12));
+
+    verify(orderSuggestionService).suggestForRetailer(any());
+  }
+
+  @Test
+  void shouldRejectSuggestionsForNonRetailer() throws Exception {
+    mockMvc.perform(get("/retailer/order-suggestions").with(loggedAs(UserRole.SUPPLIER)))
+        .andExpect(status().isForbidden());
+
+    verifyNoInteractions(orderSuggestionService);
+  }
+
+  @Test
+  void shouldListTransportInterests() throws Exception {
+    when(orderService.listTransportInterests(any(), eq(7))).thenReturn(List.of());
+
+    mockMvc.perform(get("/retailer/orders/{id}/transport-interests", 7).with(loggedAs(UserRole.RETAILER)))
+        .andExpect(status().isOk());
+
+    verify(orderService).listTransportInterests(any(), eq(7));
+  }
+
+  @Test
+  void shouldAcceptCarrier() throws Exception {
+    when(orderService.acceptCarrier(any(), eq(7), eq(3))).thenReturn(sampleOrder(OrderStatus.CONFIRMED));
+
+    mockMvc.perform(post("/retailer/orders/{id}/transport/{carrierId}/accept", 7, 3).with(loggedAs(UserRole.RETAILER)))
+        .andExpect(status().isOk());
+
+    verify(orderService).acceptCarrier(any(), eq(7), eq(3));
+  }
+
+  private OrderResponse sampleOrder(OrderStatus status) {
     return new OrderResponse(7, status, 1, "Verdulería Belgrano", 2, "Finca Los Andes",
-        120000, null, ShippingMethod.PICKUP, null, List.of(), LocalDateTime.now(), LocalDateTime.now());
+        120000, null, ShippingMethod.PICKUP, null, null, null, null, List.of(), LocalDateTime.now(), LocalDateTime.now());
   }
 
 }

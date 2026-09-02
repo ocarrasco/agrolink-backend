@@ -44,10 +44,48 @@ class CreateOrderRequestValidatorTest {
   }
 
   @Test
-  void rejectsPlatformCarrier() {
+  void supports_isTrue_forCreateOrderRequest_andFalse_forAnythingElse() {
+    assertThat(validator.supports(CreateOrderRequest.class)).isTrue();
+    assertThat(validator.supports(Object.class)).isFalse();
+    assertThat(validator.supports(String.class)).isFalse();
+  }
+
+  @Test
+  void validate_isNoop_whenTargetIsNotACreateOrderRequest() {
+    Object notARequest = new Object();
+    var errors = new BeanPropertyBindingResult(notARequest, "target");
+
+    validator.validate(notARequest, errors);
+
+    assertThat(errors.hasErrors()).isFalse();
+  }
+
+  @Test
+  void validate_isNoop_whenSupplierIdIsNull() {
+    Errors errors = validate(new CreateOrderRequest(null, List.of(new CreateOrderItemRequest(5, 10)), ShippingMethod.PICKUP, null));
+
+    assertThat(errors.hasErrors()).isFalse();
+  }
+
+  @Test
+  void validate_isNoop_whenProductsIsNull() {
+    Errors errors = validate(new CreateOrderRequest(2, null, ShippingMethod.PICKUP, null));
+
+    assertThat(errors.hasErrors()).isFalse();
+  }
+
+  @Test
+  void validate_isNoop_whenProductsIsEmpty() {
+    Errors errors = validate(new CreateOrderRequest(2, List.of(), ShippingMethod.PICKUP, null));
+
+    assertThat(errors.hasErrors()).isFalse();
+  }
+
+  @Test
+  void acceptsPlatformCarrier() {
     Errors errors = validate(request(ShippingMethod.PLATFORM_CARRIER));
 
-    assertThat(errors.getFieldError("shippingMethod")).isNotNull();
+    assertThat(errors.getFieldError("shippingMethod")).isNull();
   }
 
   @Test
