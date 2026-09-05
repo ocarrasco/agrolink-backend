@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +23,34 @@ public interface IOrderRepository extends JpaRepository<OrderModel, Integer> {
   Optional<OrderModel> findWithItemsById(Integer id);
 
   boolean existsByRetailerId(Integer retailerId);
+
+  /**
+   * A retailer's PLATFORM_CARRIER orders still in progress for a given order status — feeds
+   * "En Tránsito" (awaiting a carrier, assigned, or in transit are all {@code CONFIRMED}).
+   */
+  @EntityGraph(attributePaths = { "retailer", "supplier", "carrier", "items" })
+  List<OrderModel> findByRetailerIdAndShippingMethodAndStatusOrderByCreatedAtDesc(
+      Integer retailerId, ShippingMethod shippingMethod, OrderStatus status);
+
+  /**
+   * Master products the retailer already has a non-terminal (PLACED/CONFIRMED) order for — the
+   * suggestion services (real and fallback) must not re-suggest something already in flight.
+   */
+  @Query("""
+      select distinct i.masterProduct.id
+      from OrderItemModel i
+      where i.order.retailer.id = :retailerId
+        and i.order.status in :statuses
+      """)
+  List<Integer> findMasterProductIdsWithOpenOrders(Integer retailerId, Collection<OrderStatus> statuses);
+
+  /**
+   * A retailer's most recent order in one of the given statuses, items included — basis of the
+   * {@code OrderSuggestionFallbackService} heuristic (recommender-services unreachable).
+   */
+  @EntityGraph(attributePaths = { "items", "items.catalogItem", "items.masterProduct" })
+  Optional<OrderModel> findFirstByRetailerIdAndStatusInOrderByCreatedAtDescIdDesc(
+      Integer retailerId, Collection<OrderStatus> statuses);
 
   /** Orders awaiting a platform carrier: confirmed, shipped by the platform, no carrier assigned yet. */
   @EntityGraph(attributePaths = { "retailer", "supplier" })

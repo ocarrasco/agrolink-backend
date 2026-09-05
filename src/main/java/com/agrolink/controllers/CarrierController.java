@@ -64,18 +64,12 @@ public class CarrierController extends BaseController {
     return orderService.listForCarrier(carrier, status, year, month);
   }
 
+  /** ASSIGNED → IN_TRANSIT. Delivery confirmation is the retailer's call, not the carrier's — see {@code RetailerController#confirmDelivery}. */
   @PostMapping("/deliveries/{orderId}/pickup")
   public CarrierDeliveryResponse pickup(@PathVariable Integer orderId) {
     var carrier = loggedUser();
     log.info("Carrier {} picking up order {}", carrier.id(), orderId);
     return orderService.pickup(carrier, orderId);
-  }
-
-  @PostMapping("/deliveries/{orderId}/deliver")
-  public CarrierDeliveryResponse deliver(@PathVariable Integer orderId) {
-    var carrier = loggedUser();
-    log.info("Carrier {} delivering order {}", carrier.id(), orderId);
-    return orderService.deliver(carrier, orderId);
   }
 
 }

@@ -17,15 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -60,7 +52,6 @@ public class RetailerController extends BaseController {
     return retailerDashboardService.getDashboard(retailer);
   }
 
-  /** Purchase suggestions ("qué conviene pedir"). Placeholder heuristic — see {@code design_plan.md} iteración 6. */
   @GetMapping("/order-suggestions")
   public List<OrderSuggestionResponse> orderSuggestions() {
     var retailer = loggedUser();
@@ -78,8 +69,8 @@ public class RetailerController extends BaseController {
 
   @GetMapping("/orders")
   public List<OrderResponse> listOrders(@RequestParam(required = false) OrderStatus status,
-                                         @RequestParam(required = false) Integer year,
-                                         @RequestParam(required = false) Integer month) {
+                                        @RequestParam(required = false) Integer year,
+                                        @RequestParam(required = false) Integer month) {
     var retailer = loggedUser();
     log.info("Listing orders for retailer {} (status={}, year={}, month={})", retailer.id(), status, year, month);
     return orderService.listForRetailer(retailer, status, year, month);
@@ -99,7 +90,9 @@ public class RetailerController extends BaseController {
     return orderService.cancel(retailer, id);
   }
 
-  /** Carriers who marked interest in transporting this order. */
+  /**
+   * Carriers who marked interest in transporting this order.
+   */
   @GetMapping("/orders/{id}/transport-interests")
   public List<TransportInterestResponse> listTransportInterests(@PathVariable Integer id) {
     var retailer = loggedUser();
@@ -112,6 +105,22 @@ public class RetailerController extends BaseController {
     var retailer = loggedUser();
     log.info("Retailer {} accepting carrier {} for order {}", retailer.id(), carrierId, id);
     return orderService.acceptCarrier(retailer, id, carrierId);
+  }
+
+  /** PLATFORM_CARRIER orders still in progress: awaiting a carrier, assigned, or in transit. */
+  @GetMapping("/orders/in-transit")
+  public List<OrderResponse> listInTransit() {
+    var retailer = loggedUser();
+    log.info("Listing in-transit orders for retailer {}", retailer.id());
+    return orderService.listInTransitForRetailer(retailer);
+  }
+
+  /** The retailer confirms they received the goods — closes the order (FULFILLED). */
+  @PostMapping("/orders/{id}/transport/confirm-delivery")
+  public OrderResponse confirmDelivery(@PathVariable Integer id) {
+    var retailer = loggedUser();
+    log.info("Retailer {} confirming delivery for order {}", retailer.id(), id);
+    return orderService.confirmDelivery(retailer, id);
   }
 
 }

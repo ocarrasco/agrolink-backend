@@ -17,7 +17,7 @@ spring:
     url: ${FLYWAY_URL:${spring.datasource.url}}
     user: ${FLYWAY_USERNAME:${spring.datasource.username}}
     password: ${FLYWAY_PASSWORD:${spring.datasource.password}}
-    locations: classpath:migration
+    locations: classpath:migration,classpath:seed
   jpa:
     open-in-view: false
     hibernate:
@@ -32,6 +32,9 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/AgroLink}
+          # override when the issuer-uri host isn't reachable from this container (e.g. docker-compose,
+          # where the browser-facing issuer is localhost but the app must fetch keys via the service name)
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs}
 
 keycloak:
   admin:
@@ -39,6 +42,16 @@ keycloak:
     realm: ${KEYCLOAK_REALM:AgroLink}
     client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:agro-link-backend-admin}
     client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
+
+recommender:
+  # recommender-services microservice — purchase recommendations for /retailer/order-suggestions
+  base-url: ${RECOMMENDER_SERVICE_URL:http://localhost:9990}
+  retry:
+    # exponential backoff: attempt n waits initial-interval-ms * multiplier^(n-1), capped at max-interval-ms
+    max-attempts: ${RECOMMENDER_RETRY_MAX_ATTEMPTS:3}
+    initial-interval-ms: ${RECOMMENDER_RETRY_INITIAL_INTERVAL_MS:200}
+    multiplier: ${RECOMMENDER_RETRY_MULTIPLIER:2.0}
+    max-interval-ms: ${RECOMMENDER_RETRY_MAX_INTERVAL_MS:2000}
 
 agrolink:
   startup-sync:

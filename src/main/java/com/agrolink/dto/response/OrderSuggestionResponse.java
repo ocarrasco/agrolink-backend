@@ -3,9 +3,8 @@ package com.agrolink.dto.response;
 import com.agrolink.model.enums.ProductUnit;
 
 /**
- * One line of a retailer's purchase suggestion. <b>Placeholder heuristic</b> (random active
- * catalog items + small quantities) just to exercise the endpoint end-to-end — the real
- * demand-driven model is {@code design_plan.md} iteración 6.
+ * One line of a retailer's purchase suggestion, tied to a specific supplier — see
+ * {@code design_plan.md} iteración 6.
  */
 public record OrderSuggestionResponse(
     Integer masterProductId,
@@ -14,7 +13,9 @@ public record OrderSuggestionResponse(
     Integer avgWeeklySales,
     Integer minStock,
     Integer suggestedQuantity,
-    Integer referencePrice
+    Integer referencePrice,
+    Integer supplierId,
+    String supplierName
 ) {
 
 }

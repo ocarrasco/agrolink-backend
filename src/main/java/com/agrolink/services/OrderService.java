@@ -257,6 +257,29 @@ public class OrderService {
     return response;
   }
 
+  /** A retailer's PLATFORM_CARRIER orders still in progress (awaiting a carrier, assigned, or in transit). */
+  @Transactional(readOnly = true)
+  public List<OrderResponse> listInTransitForRetailer(LoggedUser retailer) {
+    return orderMapper.toResponseList(
+        orderRepository.findByRetailerIdAndShippingMethodAndStatusOrderByCreatedAtDesc(retailer.id(), ShippingMethod.PLATFORM_CARRIER, OrderStatus.CONFIRMED));
+  }
+
+  /**
+   * The retailer — not the carrier — confirms delivery: they're the one who actually receives the
+   * goods, so they're the one who can say it arrived. Closes the order (FULFILLED) same as the
+   * carrier-driven flow used to.
+   */
+  @Transactional
+  public OrderResponse confirmDelivery(LoggedUser retailer, Integer id) {
+    OrderModel order = retailerOrderOrThrow(retailer, id);
+    if (order.getTransportStatus() != TransportStatus.IN_TRANSIT) {
+      throw new IllegalStateException(UserMessages.TRANSPORT_NOT_IN_TRANSIT);
+    }
+    order.setTransportStatus(TransportStatus.DELIVERED);
+    order.setStatus(OrderStatus.FULFILLED);
+    return orderMapper.toResponse(orderRepository.saveAndFlush(order));
+  }
+
   // ────────────────────────── Transport (carrier execution) ──────────────────────────
 
   @Transactional(readOnly = true)
@@ -281,17 +304,6 @@ public class OrderService {
       throw new IllegalStateException(UserMessages.TRANSPORT_NOT_ASSIGNED);
     }
     order.setTransportStatus(TransportStatus.IN_TRANSIT);
-    return toCarrierDeliveryResponse(orderRepository.saveAndFlush(order), carrierRouteProfiles(order));
-  }
-
-  @Transactional
-  public CarrierDeliveryResponse deliver(LoggedUser carrier, Integer orderId) {
-    OrderModel order = carrierOrderOrThrow(carrier, orderId);
-    if (order.getTransportStatus() != TransportStatus.IN_TRANSIT) {
-      throw new IllegalStateException(UserMessages.TRANSPORT_NOT_IN_TRANSIT);
-    }
-    order.setTransportStatus(TransportStatus.DELIVERED);
-    order.setStatus(OrderStatus.FULFILLED); // delivery closes the order (replaces the manual /fulfill)
     return toCarrierDeliveryResponse(orderRepository.saveAndFlush(order), carrierRouteProfiles(order));
   }
 

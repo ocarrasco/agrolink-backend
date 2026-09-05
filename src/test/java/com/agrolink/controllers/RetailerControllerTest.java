@@ -198,12 +198,13 @@ class RetailerControllerTest extends ControllerTestSupport {
   @Test
   void shouldReturnOrderSuggestions() throws Exception {
     when(orderSuggestionService.suggestForRetailer(any())).thenReturn(List.of(
-        new OrderSuggestionResponse(10, "Tomate", ProductUnit.KILOGRAMO, 8, 3, 12, 1500)));
+        new OrderSuggestionResponse(10, "Tomate", ProductUnit.KILOGRAMO, 8, 3, 12, 1500, 5, "Finca Los Andes")));
 
     mockMvc.perform(get("/retailer/order-suggestions").with(loggedAs(UserRole.RETAILER)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].productName").value("Tomate"))
-        .andExpect(jsonPath("$[0].suggestedQuantity").value(12));
+        .andExpect(jsonPath("$[0].suggestedQuantity").value(12))
+        .andExpect(jsonPath("$[0].supplierName").value("Finca Los Andes"));
 
     verify(orderSuggestionService).suggestForRetailer(any());
   }
@@ -234,6 +235,28 @@ class RetailerControllerTest extends ControllerTestSupport {
         .andExpect(status().isOk());
 
     verify(orderService).acceptCarrier(any(), eq(7), eq(3));
+  }
+
+  @Test
+  void shouldListInTransitOrders() throws Exception {
+    when(orderService.listInTransitForRetailer(any())).thenReturn(List.of(sampleOrder(OrderStatus.CONFIRMED)));
+
+    mockMvc.perform(get("/retailer/orders/in-transit").with(loggedAs(UserRole.RETAILER)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].status").value("CONFIRMED"));
+
+    verify(orderService).listInTransitForRetailer(any());
+  }
+
+  @Test
+  void shouldConfirmDelivery() throws Exception {
+    when(orderService.confirmDelivery(any(), eq(7))).thenReturn(sampleOrder(OrderStatus.FULFILLED));
+
+    mockMvc.perform(post("/retailer/orders/{id}/transport/confirm-delivery", 7).with(loggedAs(UserRole.RETAILER)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("FULFILLED"));
+
+    verify(orderService).confirmDelivery(any(), eq(7));
   }
 
   private OrderResponse sampleOrder(OrderStatus status) {

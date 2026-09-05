@@ -117,11 +117,9 @@ class CarrierControllerTest extends ControllerTestSupport {
   }
 
   @Test
-  void shouldDeliver() throws Exception {
+  void shouldRejectDeliverEndpoint_becauseItNoLongerExists() throws Exception {
     mockMvc.perform(post("/carrier/deliveries/{id}/deliver", 7).with(loggedAs(UserRole.CARRIER)))
-        .andExpect(status().isOk());
-
-    verify(orderService).deliver(any(), eq(7));
+        .andExpect(status().isNotFound());
   }
 
   @Test

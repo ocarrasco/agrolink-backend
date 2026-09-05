@@ -584,36 +584,61 @@ class OrderServiceTest {
   }
 
   @Test
-  void deliver_movesInTransitToDelivered_andFulfillsOrder() {
-    LoggedUser carrier = loggedUser(3, UserRole.CARRIER);
-    OrderModel order = assignedTransportOrder(5, user(3, "Transportes Andes"), TransportStatus.IN_TRANSIT);
-    when(orderRepository.findWithItemsById(5)).thenReturn(Optional.of(order));
-    when(orderRepository.saveAndFlush(order)).thenReturn(order);
-    when(userProfileRepository.findByUserIdIn(any())).thenReturn(List.of());
-
-    CarrierDeliveryResponse response = orderService.deliver(carrier, 5);
-
-    assertThat(response.transportStatus()).isEqualTo(TransportStatus.DELIVERED);
-    assertThat(order.getStatus()).isEqualTo(OrderStatus.FULFILLED);
-  }
-
-  @Test
-  void deliver_rejects_whenNotInTransit() {
-    LoggedUser carrier = loggedUser(3, UserRole.CARRIER);
-    OrderModel order = assignedTransportOrder(5, user(3, "Transportes Andes"), TransportStatus.ASSIGNED);
-    when(orderRepository.findWithItemsById(5)).thenReturn(Optional.of(order));
-
-    assertThatThrownBy(() -> orderService.deliver(carrier, 5))
-        .isInstanceOf(IllegalStateException.class);
-  }
-
-  @Test
   void carrierDelivery_throws_whenOrderAssignedToAnotherCarrier() {
     LoggedUser carrier = loggedUser(3, UserRole.CARRIER);
     OrderModel order = assignedTransportOrder(5, user(99, "Otro"), TransportStatus.ASSIGNED);
     when(orderRepository.findWithItemsById(5)).thenReturn(Optional.of(order));
 
     assertThatThrownBy(() -> orderService.pickup(carrier, 5))
+        .isInstanceOf(EntityNotFoundException.class);
+  }
+
+  // ────────────────────────── transport (retailer confirms delivery) ──────────────────────────
+
+  @Test
+  void listInTransitForRetailer_returnsRetailersOpenPlatformCarrierOrders() {
+    LoggedUser retailer = loggedUser(1, UserRole.RETAILER);
+    OrderModel order = assignedTransportOrder(5, user(3, "Transportes Andes"), TransportStatus.IN_TRANSIT);
+    when(orderRepository.findByRetailerIdAndShippingMethodAndStatusOrderByCreatedAtDesc(1, ShippingMethod.PLATFORM_CARRIER, OrderStatus.CONFIRMED))
+        .thenReturn(List.of(order));
+
+    List<OrderResponse> responses = orderService.listInTransitForRetailer(retailer);
+
+    assertThat(responses).extracting(OrderResponse::id).containsExactly(5);
+  }
+
+  @Test
+  void confirmDelivery_movesInTransitToDelivered_andFulfillsOrder() {
+    LoggedUser retailer = loggedUser(1, UserRole.RETAILER);
+    OrderModel order = assignedTransportOrder(5, user(3, "Transportes Andes"), TransportStatus.IN_TRANSIT);
+    when(orderRepository.findWithItemsById(5)).thenReturn(Optional.of(order));
+    when(orderRepository.saveAndFlush(order)).thenReturn(order);
+
+    OrderResponse response = orderService.confirmDelivery(retailer, 5);
+
+    assertThat(response.transportStatus()).isEqualTo(TransportStatus.DELIVERED);
+    assertThat(order.getStatus()).isEqualTo(OrderStatus.FULFILLED);
+  }
+
+  @Test
+  void confirmDelivery_rejects_whenNotInTransit() {
+    LoggedUser retailer = loggedUser(1, UserRole.RETAILER);
+    OrderModel order = assignedTransportOrder(5, user(3, "Transportes Andes"), TransportStatus.ASSIGNED);
+    when(orderRepository.findWithItemsById(5)).thenReturn(Optional.of(order));
+
+    assertThatThrownBy(() -> orderService.confirmDelivery(retailer, 5))
+        .isInstanceOf(IllegalStateException.class);
+
+    verify(orderRepository, never()).saveAndFlush(any());
+  }
+
+  @Test
+  void confirmDelivery_throws_whenOrderBelongsToAnotherRetailer() {
+    LoggedUser retailer = loggedUser(99, UserRole.RETAILER);
+    OrderModel order = assignedTransportOrder(5, user(3, "Transportes Andes"), TransportStatus.IN_TRANSIT);
+    when(orderRepository.findWithItemsById(5)).thenReturn(Optional.of(order));
+
+    assertThatThrownBy(() -> orderService.confirmDelivery(retailer, 5))
         .isInstanceOf(EntityNotFoundException.class);
   }
 

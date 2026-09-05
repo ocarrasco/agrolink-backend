@@ -1,65 +1,59 @@
 package com.agrolink.services;
 
+import com.agrolink.clients.RecommenderClient;
 import com.agrolink.dto.response.OrderSuggestionResponse;
-import com.agrolink.model.CatalogItemModel;
-import com.agrolink.repositories.ICatalogItemRepository;
+import com.agrolink.dto.response.RecommendedProductResponse;
+import com.agrolink.model.UserModel;
+import com.agrolink.repositories.IUserRepository;
 import com.agrolink.security.LoggedUser;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
-/**
- * Purchase suggestions for a retailer ("qué conviene pedir"). <b>Placeholder implementation</b>:
- * a handful of random active catalog items with small suggested quantities, only to show the
- * endpoint working. The real demand-driven model (from {@code order_item} history) is
- * {@code design_plan.md} iteración 6.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderSuggestionService {
 
-  private static final int MAX_SUGGESTIONS = 4;
+  @NonNull
+  private final RecommenderClient recommenderClient;
 
   @NonNull
-  private final ICatalogItemRepository catalogItemRepository;
+  private final OrderSuggestionFallbackService fallbackService;
 
-  @Transactional(readOnly = true)
+  @NonNull
+  private final IUserRepository userRepository;
+
   public List<OrderSuggestionResponse> suggestForRetailer(LoggedUser retailer) {
-    List<CatalogItemModel> items = new ArrayList<>(catalogItemRepository.findActiveItems(null, null));
-    Collections.shuffle(items);
-
-    ThreadLocalRandom random = ThreadLocalRandom.current();
-    Map<Integer, OrderSuggestionResponse> byProduct = new LinkedHashMap<>();
-    for (CatalogItemModel item : items) {
-      if (byProduct.size() >= MAX_SUGGESTIONS) {
-        break;
-      }
-      Integer productId = item.getMasterProduct().getId();
-      byProduct.computeIfAbsent(productId, id -> {
-        int minStock = 2 + random.nextInt(6);
-        int suggested = minStock + random.nextInt(10);
-        return new OrderSuggestionResponse(
-            id,
-            item.getMasterProduct().getName(),
-            item.getUnit(),
-            4 + random.nextInt(12),
-            minStock,
-            suggested,
-            item.getPricePerUnit());
-      });
+    try {
+      List<RecommendedProductResponse> raw = recommenderClient.fetchRecommendations(retailer.id());
+      List<OrderSuggestionResponse> result = enrichWithSupplierName(raw);
+      log.info("Order suggestions for retailer {}: {} item(s)", retailer.id(), result.size());
+      return result;
+    } catch (RestClientException e) {
+      log.warn("Recommender service unavailable for retailer {} after retries: {}", retailer.id(), e.getMessage());
+      return fallbackService.getFallbackOrderSuggestions(retailer.id());
     }
-
-    log.info("Order suggestions for retailer {}: {} item(s) (placeholder heuristic)", retailer.id(), byProduct.size());
-    return List.copyOf(byProduct.values());
   }
+
+  /** Recommender responses only carry {@code supplierId} — it never touches {@code platform_user}. */
+  private List<OrderSuggestionResponse> enrichWithSupplierName(List<RecommendedProductResponse> raw) {
+    List<Integer> supplierIds = raw.stream().map(RecommendedProductResponse::supplierId).distinct().toList();
+    Map<Integer, String> nameById = userRepository.findAllById(supplierIds).stream()
+        .collect(Collectors.toMap(UserModel::getId, UserModel::getName));
+
+    return raw.stream()
+        .map(r -> new OrderSuggestionResponse(
+            r.masterProductId(), r.productName(), r.unit(), r.avgWeeklySales(), r.minStock(),
+            r.suggestedQuantity(), r.referencePrice(), r.supplierId(),
+            nameById.getOrDefault(r.supplierId(), "Proveedor #" + r.supplierId())))
+        .toList();
+  }
+
 }

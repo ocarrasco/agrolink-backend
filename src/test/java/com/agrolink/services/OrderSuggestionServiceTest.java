@@ -1,30 +1,39 @@
 package com.agrolink.services;
 
+import com.agrolink.clients.RecommenderClient;
 import com.agrolink.dto.response.OrderSuggestionResponse;
-import com.agrolink.model.CatalogItemModel;
-import com.agrolink.model.MasterProductModel;
+import com.agrolink.dto.response.RecommendedProductResponse;
+import com.agrolink.model.UserModel;
 import com.agrolink.model.enums.ProductUnit;
 import com.agrolink.model.enums.UserRole;
-import com.agrolink.repositories.ICatalogItemRepository;
+import com.agrolink.repositories.IUserRepository;
 import com.agrolink.security.LoggedUser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.client.RestClientException;
 
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class OrderSuggestionServiceTest {
 
   @Mock
-  private ICatalogItemRepository catalogItemRepository;
+  private RecommenderClient recommenderClient;
+
+  @Mock
+  private OrderSuggestionFallbackService fallbackService;
+
+  @Mock
+  private IUserRepository userRepository;
 
   @InjectMocks
   private OrderSuggestionService service;
@@ -32,41 +41,48 @@ class OrderSuggestionServiceTest {
   private final LoggedUser retailer = new LoggedUser(1, UUID.randomUUID(), UserRole.RETAILER);
 
   @Test
-  void suggestForRetailer_returnsAtMostFourDistinctProducts_withPositiveQuantities() {
-    when(catalogItemRepository.findActiveItems(isNull(), isNull())).thenReturn(List.of(
-        item(10, "Tomate", 1500), item(10, "Tomate", 1600),
-        item(20, "Papa", 800), item(30, "Cebolla", 900),
-        item(40, "Zapallo", 1200), item(50, "Lechuga", 700)));
+  void suggestForRetailer_enrichesRecommenderResponse_withSupplierName() {
+    RecommendedProductResponse raw =
+        new RecommendedProductResponse(10, "Tomate", ProductUnit.KILOGRAMO, 8, 4, 12, 1500, 5);
+    when(recommenderClient.fetchRecommendations(1)).thenReturn(List.of(raw));
+    when(userRepository.findAllById(anyCollection())).thenReturn(List.of(supplier(5, "Finca Los Andes")));
 
-    List<OrderSuggestionResponse> suggestions = service.suggestForRetailer(retailer);
+    List<OrderSuggestionResponse> result = service.suggestForRetailer(retailer);
 
-    assertThat(suggestions).hasSizeLessThanOrEqualTo(4);
-    assertThat(suggestions).extracting(OrderSuggestionResponse::masterProductId).doesNotHaveDuplicates();
-    assertThat(suggestions).allSatisfy(s -> {
-      assertThat(s.suggestedQuantity()).isPositive();
-      assertThat(s.referencePrice()).isPositive();
-      assertThat(s.productName()).isNotBlank();
-    });
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).masterProductId()).isEqualTo(10);
+    assertThat(result.get(0).supplierId()).isEqualTo(5);
+    assertThat(result.get(0).supplierName()).isEqualTo("Finca Los Andes");
+    verifyNoInteractions(fallbackService);
   }
 
   @Test
-  void suggestForRetailer_returnsEmpty_whenNoActiveCatalogItems() {
-    when(catalogItemRepository.findActiveItems(isNull(), isNull())).thenReturn(List.of());
+  void suggestForRetailer_usesPlaceholderName_whenSupplierNotFound() {
+    RecommendedProductResponse raw =
+        new RecommendedProductResponse(10, "Tomate", ProductUnit.KILOGRAMO, 8, 4, 12, 1500, 5);
+    when(recommenderClient.fetchRecommendations(1)).thenReturn(List.of(raw));
+    when(userRepository.findAllById(anyCollection())).thenReturn(List.of());
 
-    assertThat(service.suggestForRetailer(retailer)).isEmpty();
+    List<OrderSuggestionResponse> result = service.suggestForRetailer(retailer);
+
+    assertThat(result.get(0).supplierName()).isEqualTo("Proveedor #5");
   }
 
-  private static CatalogItemModel item(int masterProductId, String name, int price) {
-    MasterProductModel mp = new MasterProductModel();
-    mp.setId(masterProductId);
-    mp.setName(name);
-    mp.setUnit(ProductUnit.KILOGRAMO);
+  @Test
+  void suggestForRetailer_fallsBackToLocalHeuristic_whenRecommenderClientExhaustsRetries() {
+    OrderSuggestionResponse fallbackSuggestion =
+        new OrderSuggestionResponse(20, "Papa", ProductUnit.KILOGRAMO, null, 5, 5, 600, 7, "Chacra del Sol");
+    when(recommenderClient.fetchRecommendations(1)).thenThrow(new RestClientException("boom"));
+    when(fallbackService.getFallbackOrderSuggestions(1)).thenReturn(List.of(fallbackSuggestion));
 
-    CatalogItemModel item = new CatalogItemModel();
-    item.setMasterProduct(mp);
-    item.setUnit(ProductUnit.KILOGRAMO);
-    item.setPricePerUnit(price);
-    item.setAvailableQuantity(100);
-    return item;
+    assertThat(service.suggestForRetailer(retailer)).containsExactly(fallbackSuggestion);
   }
+
+  private static UserModel supplier(int id, String name) {
+    UserModel user = new UserModel();
+    user.setId(id);
+    user.setName(name);
+    return user;
+  }
+
 }

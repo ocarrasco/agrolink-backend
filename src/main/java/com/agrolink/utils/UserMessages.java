@@ -57,7 +57,7 @@ public final class UserMessages {
   public static final String ORDER_WITH_YOURSELF = "El comprador y el proveedor de una orden deben ser usuarios distintos.";
   public static final String SUPPLIER_HAS_NO_DELIVERY = "El proveedor seleccionado no ofrece despacho propio; solo admite retiro en finca.";
   public static final String ORDER_NOT_AWAITING_TRANSPORT = "La orden no está esperando un transportista de la plataforma.";
-  public static final String PLATFORM_CARRIER_FULFILL_BY_CARRIER = "La entrega de esta orden la confirma el transportista asignado.";
+  public static final String PLATFORM_CARRIER_FULFILL_BY_CARRIER = "La entrega de esta orden la confirma el retailer una vez que el transportista la marca en tránsito.";
   public static final String TRANSPORT_NOT_ASSIGNED = "El transporte de esta orden no está listo para iniciar el retiro.";
   public static final String TRANSPORT_NOT_IN_TRANSIT = "El transporte de esta orden no está en tránsito.";
 
